@@ -18,7 +18,7 @@ You need dependencies below.
 
 Download the "64-bit Driver Package", and the "Sample Root File System" from https://developer.nvidia.com/embedded/linux-tegra-archive. 
 
-Using the instructions from http://developer.download.nvidia.com/embedded/L4T/r23_Release_v1.0/l4t_quick_start_guide.txt
+Use the instructions from https://developer.download.nvidia.com/embedded/L4T/r28_Release_v2.0/GA/BSP/l4t_quick_start_guide.txt.
 
 ## Check Python Version
 
@@ -27,43 +27,221 @@ python -V
 python3 -V
 ```
 
+# Install OpenCV3
 
-'Openpose' for human pose estimation have been implemented using Tensorflow. It also provides several variants that have made some changes to the network structure for **real-time processing on the CPU or low-power embedded devices.**
+Based on https://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/ with some modifications.
 
-
-**You can even run this on your macbook with descent FPS!**
-
-Original Repo(Caffe) : https://github.com/CMU-Perceptual-Computing-Lab/openpose
-
-| CMU's Original Model</br> on Macbook Pro 15" | Mobilenet Variant </br>on Macbook Pro 15" | Mobilenet Variant</br>on Jetson TX2 |
-|:---------|:--------------------|:----------------|
-| ![cmu-model](/etcs/openpose_macbook_cmu.gif)     | ![mb-model-macbook](/etcs/openpose_macbook_mobilenet3.gif) | ![mb-model-tx2](/etcs/openpose_tx2_mobilenet3.gif) |
-| **~0.6 FPS** | **~4.2 FPS** @ 368x368 | **~10 FPS** @ 368x368 |
-| 2.8GHz Quad-core i7 | 2.8GHz Quad-core i7 | Jetson TX2 Embedded Board | 
-
-Implemented features are listed here : [features](./etcs/feature.md)
-
-## Important Updates
-
-2018.2.7 Arguments in run.py script changed. Support dynamic input size.
-
-## Install
-
-### Dependencies
-
-You need dependencies below.
-
-- python3
-- tensorflow 1.4.1+
-- opencv3, protobuf, python3-tk
-
-### Install
+Install dependencies
 
 ```bash
-$ git clone https://www.github.com/ildoonet/tf-openpose
-$ cd tf-openpose
-$ pip3 install -r requirements.txt
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install build-essential cmake pkg-config
+sudo apt-get install libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev
+sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+sudo apt-get install libxvidcore-dev libx264-dev
+sudo apt-get install libgtk-3-dev
+sudo apt-get install libatlas-base-dev gfortran
+sudo apt-get install python2.7-dev python3.5-dev
 ```
+
+Install OpenCV
+
+```bash
+cd ~
+wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.0.0.zip
+unzip opencv.zip
+wget -O opencv_contrib.zip https://github.com/Itseez/opencv_contrib/archive/3.1.0.zip
+unzip opencv_contrib.zip
+wget https://bootstrap.pypa.io/get-pip.py
+sudo python get-pip.py
+sudo pip install numpy
+```
+
+Build and make OpenCV
+
+```bash
+cd ~/opencv-3.0.0/
+mkdir build
+cd build
+cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D FORCE_VTK=ON -D WITH_TBB=ON -D WITH_V4L=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D WITH_CUBLAS=ON -D CUDA_NVCC_FLAGS="-D_FORCE_INLINES" -D WITH_GDAL=ON -D WITH_XINE=ON -D BUILD_EXAMPLES=ON ..
+make
+```
+
+If there are any issues during the building and making of OpenCV, run the following commands. Else ignore
+
+```bash
+make clean
+cd ..
+sudo rm -r build
+mkdir build
+cd build
+cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D FORCE_VTK=ON -D WITH_TBB=ON -D WITH_V4L=ON -D WITH_QT=ON -D WITH_OPENGL=ON -D WITH_CUBLAS=ON -D CUDA_NVCC_FLAGS="-D_FORCE_INLINES" -D WITH_GDAL=ON -D WITH_XINE=ON -D BUILD_EXAMPLES=ON ..
+make
+```
+
+Finish by actually install OpenCV
+
+```bash
+sudo make install
+sudo ldconfig
+```
+
+If using Python 2.7
+
+```bash
+cd ~/.virtualenvs/cv/lib/python2.7/site-packages/
+ln -s /usr/local/lib/python2.7/site-packages/cv2.so cv2.so
+```
+
+If using Python 3+
+
+```bash
+cd /usr/local/lib/python3.5/site-packages/
+sudo mv cv2.cpython-35m-x86_64-linux-gnu.so cv2.so
+cd ~/.virtualenvs/cv/lib/python3.5/site-packages/
+ln -s /usr/local/lib/python3.5/site-packages/cv2.so cv2.so
+```
+
+Validate installation
+```bash
+python
+import cv2
+cv2.__version__
+```
+
+Your output should show the version of OpenCV you just installed. If you get any other issues, you may need to Google your issue, redo the "Build and Make" steps, or even reflash the Jetson.
+
+### Update Nvidia Drivers
+
+Default drivers are from Nouveau who tried to reverse engineering the Nvidia drivers but they don't work with CUDA or cuDNN. Check http://www.nvidia.com/object/unix.html for the latest version of the Nvidia driver -- this project used 390.
+
+The following instructions was based on http://www.linuxandubuntu.com/home/how-to-install-latest-nvidia-drivers-in-linux. 
+
+Go through the following commands
+
+```bash
+sudo apt-get purge nvidia*
+sudo add-apt-repository ppa:graphics-drivers
+sudo apt-get update
+sudo apt-get install nvidia-[number]
+```
+
+Where [number] for me was 390 based on the above link.
+
+```bash
+lsmod | grep nvidia
+```
+
+If no output, then something went wrong, try Update Nvidia Drivers steps from the beginning again
+
+```bash
+lsmod | grep nouveau
+```
+
+There should be no output from there
+
+```bash
+sudo reboot
+```
+
+### Install CUDA Toolkit 9.1
+
+- 05/07/2018: I used CUDA Toolkit 9.1, but there may be a newer version that may have issues that you'd need to Google to fix.
+
+Based on https://chunml.github.io/ChunML.github.io/project/Installing-Caffe-Ubuntu/ with some modifications, and ignoring the fact that this is for Caffe.
+
+Go to https://developer.nvidia.com/cuda-downloads and download the CUDA Toolkit according to your OS, Architecture, Distribution, and Version. I used Linux, x86_64, Ubuntu, and 16.04. For the Installer Type, I chose "deb (network)". We will call this downloaded file [file].
+
+```bash
+cd ~/cuda-downloads
+sudo dpkg -i [file].deb
+sudo apt-get update
+sudo apt-get install cuda
+```
+
+### Install cuDNN v7.1.3
+
+- 05/07/2018: I used cuDNN v7.1.3, but there may be a newer version that may have issues that you'd need to Google to fix.
+
+Based on https://chunml.github.io/ChunML.github.io/project/Installing-Caffe-Ubuntu/ with some modifications, and ignoring the fact that this is for Caffe.
+
+Go to https://developer.nvidia.com/cudnn, sign up as an Nvidia developer and download the file for "cuDNN v7.1.3 for CUDA 9.1". Usually this is the "cuDNN v7.1.3 Libary for Linux" file. We will call this downloaded file [file].
+
+```bash
+cd ~/Downloads
+tar -xvf [file].tgz
+cd cuda
+sudo cp lib64/* /usr/local/cuda/lib64
+sudo cp include/* /usr/local/cuda/include
+```
+
+### Install Tensorflow 1.7
+
+Based on https://www.tensorflow.org/install/install_linux#ValidateYourInstallation with some modifications.
+
+Install some stuff for Python
+
+```bash
+sudo apt-get install python-pip python-dev python3-pip python3-dev
+```
+
+I found from https://github.com/tensorflow/tensorflow/issues/15604 that the latest version of Tensorflow 1.8 (from using "sudo pip install tensorflow-gpu" from their website) does not support CUDA 9.0, so we need to use Tensorflow 1.7
+
+If you are using Python 2.7
+
+```bash
+sudo pip upgrade
+sudo pip install --upgrade tensorflow-gpu==1.7
+```
+
+If you are using Python 3+
+
+```bash
+sudo pip3 upgrade
+sudo pip3 install --upgrade tensorflow-gpu==1.7
+```
+
+Validate the installation
+
+```bash
+python
+import tensorflow as tf
+hello = tf.constant('Hello, TensorFlow!')
+sess = tf.Session()
+print(sess.run(hello))
+```
+
+This should output "Hello, TensorFlow!"
+
+### Install ryanawong/tf-pose-estimation
+
+```bash
+cd ~
+git clone https://github.com/ryanawong/tf-pose-estimation
+cd tf-pose-estimation
+```
+
+If using Python 2.7
+
+```bash
+sudo pip install -r requirements.txt
+```
+
+If using Python 3+
+
+```bash
+sudo pip3 install -r requirements.txt
+```
+
+Setup tf-pose-estimation
+
+```bash
+cd models/graph/cmu
+bash download.sh
+```
+
+
 
 ## Models
 
