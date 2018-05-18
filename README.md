@@ -1,5 +1,33 @@
 # tf-pose-estimation
 
+This project forks the repository from https://github.com/ildoonet/tf-pose-estimation.
+
+## Setup
+
+This was intended for the Nvidia Jetson TX2, but was successfully tested on a dual boot using Ubuntu 16.04.
+
+### Dependencies
+
+You need dependencies below.
+
+- python3/2.7
+- tensorflow 1.4.1+
+- opencv3, protobuf, python3-tk
+
+### Flashing the Nvidia Jetson Board
+
+Download the "64-bit Driver Package", and the "Sample Root File System" from https://developer.nvidia.com/embedded/linux-tegra-archive. 
+
+Using the instructions from http://developer.download.nvidia.com/embedded/L4T/r23_Release_v1.0/l4t_quick_start_guide.txt
+
+## Check Python Version
+
+```bash
+python -V
+python3 -V
+```
+
+
 'Openpose' for human pose estimation have been implemented using Tensorflow. It also provides several variants that have made some changes to the network structure for **real-time processing on the CPU or low-power embedded devices.**
 
 
