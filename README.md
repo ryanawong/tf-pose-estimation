@@ -260,10 +260,12 @@ cd [root]/src
 Run the webcam.sh shell script
 
 ```bash
-./webcam
+./webcam.sh
 ```
 
 ## Changes
+
+Primary files for knee bend pose estimation: [webcam.sh](./src/webcam.sh) and [webcam.py](./src/webcam.py)
 
 ### webcam.py
 
