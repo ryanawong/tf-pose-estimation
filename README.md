@@ -20,7 +20,7 @@ Download the "64-bit Driver Package", and the "Sample Root File System" from htt
 
 Use the instructions from https://developer.download.nvidia.com/embedded/L4T/r28_Release_v2.0/GA/BSP/l4t_quick_start_guide.txt.
 
-## Check Python Version
+### Check Python Version
 
 ```bash
 python -V
@@ -45,13 +45,13 @@ sudo apt-get install libatlas-base-dev gfortran
 sudo apt-get install python2.7-dev python3.5-dev
 ```
 
-Install OpenCV
+Download OpenCV
 
 ```bash
 cd ~
 wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.0.0.zip
 unzip opencv.zip
-wget -O opencv_contrib.zip https://github.com/Itseez/opencv_contrib/archive/3.1.0.zip
+wget -O opencv_contrib.zip https://github.com/Itseez/opencv_contrib/archive/3.0.0.zip
 unzip opencv_contrib.zip
 wget https://bootstrap.pypa.io/get-pip.py
 sudo python get-pip.py
@@ -80,7 +80,7 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D FORCE_VT
 make
 ```
 
-Finish by actually install OpenCV
+Finish by actually installing OpenCV
 
 ```bash
 sudo make install
@@ -106,6 +106,9 @@ ln -s /usr/local/lib/python3.5/site-packages/cv2.so cv2.so
 Validate installation
 ```bash
 python
+```
+
+```python
 import cv2
 cv2.__version__
 ```
@@ -206,6 +209,9 @@ Validate the installation
 
 ```bash
 python
+```
+
+```python
 import tensorflow as tf
 hello = tf.constant('Hello, TensorFlow!')
 sess = tf.Session()
@@ -241,56 +247,36 @@ cd models/graph/cmu
 bash download.sh
 ```
 
+## Pose Estimation Usage
 
+If you followed the instructions above, then [root] will refer to "~/tf-pose-estimation". Else it'll be the root directory for the tf-pose-estimation repository that you cloned. 
 
-## Models
+Go to [root]/src directory
 
-I have tried multiple variations of models to find optmized network architecture. Some of them are below and checkpoint files are provided for research purpose. 
-
-- cmu 
-  - the model based VGG pretrained network which described in the original paper.
-  - I converted Weights in Caffe format to use in tensorflow.
-  - [pretrained weight download](https://www.dropbox.com/s/xh5s7sb7remu8tx/openpose_coco.npy?dl=0)
-  
-- dsconv
-  - Same architecture as the cmu version except for the **depthwise separable convolution** of mobilenet.
-  - I trained it using 'transfer learning', but it provides not-enough speed and accuracy.
-  
-- mobilenet
-  - Based on the mobilenet paper, 12 convolutional layers are used as feature-extraction layers.
-  - To improve on small person, **minor modification** on the architecture have been made.
-  - Three models were learned according to network size parameters.
-    - mobilenet
-      - 368x368 : [checkpoint weight download](https://www.dropbox.com/s/09xivpuboecge56/mobilenet_0.75_0.50_model-388003.zip?dl=0)
-    - mobilenet_fast
-    - mobilenet_accurate
-  - I published models which is not the best ones, but you can test them before you trained a model from the scratch.
-
-### Download Tensorflow Graph File(pb file)
-
-Before running demo, you should download graph files. You can deploy this graph on your mobile or other platforms.
-
-- cmu (trained in 656x368)
-- mobilenet_thin (trained in 432x368)
-
-CMU's model graphs are too large for git, so I uploaded them on an external cloud. You should download them if you want to use cmu's original model. Download scripts are provided in the model folder.
-
-```
-$ cd models/graph/cmu
-$ bash download.sh
+```bash
+cd [root]/src
 ```
 
-### Inference Time
+Run the webcam.sh shell script
 
-| Dataset | Model              | Inference Time<br/>Macbook Pro i5 3.1G | Inference Time<br/>Jetson TX2  |
-|---------|--------------------|----------------:|----------------:|
-| Coco    | cmu                | 10.0s @ 368x368 | OOM   @ 368x368<br/> 5.5s  @ 320x240|
-| Coco    | dsconv             | 1.10s @ 368x368 |
-| Coco    | mobilenet_accurate | 0.40s @ 368x368 | 0.18s @ 368x368 |
-| Coco    | mobilenet          | 0.24s @ 368x368 | 0.10s @ 368x368 |
-| Coco    | mobilenet_fast     | 0.16s @ 368x368 | 0.07s @ 368x368 |
+```bash
+./webcam
+```
+
+## Changes
+
+### webcam.py
+
+- based on run_webcam.py. 
+- Line 33: Check arguments for output path
+- Lines 44 - 46: Create CSV file and write first line
+- Lines 74 - 151: Shows joint coordinates, and calculate right knee and right hip angle for knee bends
+- Line 163: Close CSV file
+
 
 ## Demo
+
+- 05/07/2018: This demo section is from the original https://github.com/ildoonet/tf-pose-estimation repository.
 
 ### Test Inference
 
